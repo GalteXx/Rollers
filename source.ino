@@ -1,7 +1,6 @@
 #include <TroykaDHT.h>
 #include <AceRoutine.h>
 
-
 DHT term(5, DHT11);
 
 int lastInformationFetch;
