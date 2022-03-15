@@ -1,11 +1,16 @@
-#include <TroykaDHT.h>
-#include <AceRoutine.h>
 
-DHT term(5, DHT11);
+#include <TroykaThermometer.h>
 
-int lastInformationFetch;
+#define TRANS 6
+
+
+
+TroykaThermometer term(A0);
+
+int lastInformationFetch = 0;
 int targetTMP;
 bool isEnabled = true;
+bool TransEnabled = false;
 
 
 int prcss(String str){
@@ -29,9 +34,11 @@ int prcss(String str){
 
 void setup(){
     //pins should go here
+    pinMode(7, OUTPUT);
     Serial.begin(9600);
-    term.begin();
+    Serial.println(-1);
 }
+
 
 void dataExchange(){
     const unsigned long currentTime = millis(); //this should be fine, unless ran for 49 days straight
@@ -47,13 +54,18 @@ void dataExchange(){
     String order = Serial.readString();
 
     if(prcss(order) == -1){
+        if(isEnabled)
+            digitalWrite(TRANS, LOW);
+        if(!isEnabled)
+            digitalWrite(TRANS, HIGH);
         isEnabled = !isEnabled;
-        //turn transistor on or off respectively
     }
     else
         targetTMP = prcss(order);
 
 }
+
+
 
 void loop(){
     dataExchange();
@@ -61,11 +73,13 @@ void loop(){
     if(!isEnabled)
         return;
 
-    if(term.getTemperatureC() > targetTMP /*&& TransistorEnabled*/){
-        //turn transistor off
+    if(term.getTemperatureC() > targetTMP && TransEnabled){
+        digitalWrite(TRANS, LOW);
+
     }
-    else if(term.getTemperatureC() < targetTMP /*&& TransistorDisabled*/){
-        //turns transistor on
+    else if(term.getTemperatureC() < targetTMP && !TransEnabled){
+        digitalWrite(TRANS, HIGH);
+
     }
     
     //anything else?
